@@ -10,31 +10,31 @@ using Un4seen.BassWasapi;
 namespace CSharpNationV2
 {
     public class Analyzer
-    {
-        private bool _enable;               //enabled status        
-        public float[] _fft;               //buffer for fft data       
-        private WASAPIPROC _process;        //callback function to obtain data            
-        public List<double> _spectrumdata;   //spectrum data buffer        
-        public List<string> _devicelist;       //device list
-        private bool _initialized;          //initialized flag
-        private int devindex = 0;           //used device index      
+    {             
+        public float[] _fft;               //buffer for fft data
+        private WASAPIPROC _process;        //callback function to obtain data
+        public List<double> _spectrumdata;   //spectrum data buffer
+
+        private int previousDevice = -1;
 
         public float multiplier = 1;
         public int _lines = 50;
 
+        #region Constructor
         public Analyzer()
         {
             _fft = new float[8192];
             _process = new WASAPIPROC(Process);
-            _spectrumdata = new List<double>();
-            _devicelist = new List<string>();
-            _initialized = false;
+            _spectrumdata = new List<double>();           
 
             InitializeSpectrumData();
 
-            Init(0);
+            Init();
+            CaptureDevice(0);
         }
-        
+        #endregion
+
+        #region Initialize
         private void InitializeSpectrumData()
         {
             for(int i = 0; i < _lines; i++)
@@ -42,57 +42,73 @@ namespace CSharpNationV2
                 _spectrumdata.Add(0);
             }
         }
-
-        public bool Enable
-        {
-            get { return _enable; }
-            set
+        
+        private void Init()
+        {            
+            Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_UPDATETHREADS, false);            
+            if(!Bass.BASS_Init(0, 44100, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero))
             {
-                _enable = value;
-                if (value)
-                {
-                    if (!_initialized)
-                    {
-                        var array = (_devicelist[0] as string).Split(' ');
-                        devindex = Convert.ToInt32(array[0]);
-                        bool result = BassWasapi.BASS_WASAPI_Init(devindex, 0, 0, BASSWASAPIInit.BASS_WASAPI_BUFFER, 1f, 0.05f, _process, IntPtr.Zero);
-                        if (!result)
-                        {
-                            var error = Bass.BASS_ErrorGetCode();
-                            //MessageBox.Show(error.ToString());
-                        }
-                        else
-                        {
-                            _initialized = true;
-                        }
-                    }
-                    BassWasapi.BASS_WASAPI_Start();
-                }
-                else BassWasapi.BASS_WASAPI_Stop(true);
-                System.Threading.Thread.Sleep(500);
+                throw new Exception("Init Error");
             }
         }
+        #endregion
 
-        private void Init(int Channel)
+        #region Devices
+        public List<string> GetDevices()
         {
-            bool result = false;
+            List<string> Devices = new List<string>();
+
             for (int i = 0; i < BassWasapi.BASS_WASAPI_GetDeviceCount(); i++)
             {
-                var device = BassWasapi.BASS_WASAPI_GetDeviceInfo(i);
+                BASS_WASAPI_DEVICEINFO device = BassWasapi.BASS_WASAPI_GetDeviceInfo(i);
                 if (device.IsEnabled && device.IsLoopback)
                 {
-                    _devicelist.Add(string.Format("{0} - {1}", i, device.name));
+                    Devices.Add(string.Format("{0} - {1}", i, device.name));
                 }
             }
-            //_devicelist.SelectedIndex = Channel;
-            Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_UPDATETHREADS, false);
-            result = Bass.BASS_Init(0, 44100, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero);
-            if (!result) throw new Exception("Init Error");
+
+            return Devices;
         }
 
-        public List<double> GetSpectrum()
+        private void CaptureDevice(int deviceIndex)
+        {            
+            int device = Convert.ToInt32(GetDevices()[deviceIndex].Split(' ')[0]);
+            
+            if(!BassWasapi.BASS_WASAPI_Init(device, 0, 0, BASSWASAPIInit.BASS_WASAPI_BUFFER, 1f, 0.05f, _process, IntPtr.Zero))
+            {
+                throw new Exception(Bass.BASS_ErrorGetCode().ToString());
+            }            
+
+            BassWasapi.BASS_WASAPI_Start();
+
+            previousDevice = deviceIndex;
+        }
+
+        public void ResumeCapture()
         {
-            //_spectrumdata.Clear();
+            BassWasapi.BASS_WASAPI_Start();
+        }
+
+        public void PauseCapture()
+        {
+            BassWasapi.BASS_WASAPI_Stop(true);
+        }
+
+        public void ChangeDevice(int deviceIndex)
+        {
+            if(deviceIndex != previousDevice && deviceIndex < GetDevices().Count)
+            {
+                Free();
+
+                Init();
+                CaptureDevice(deviceIndex);
+            }
+        }
+        #endregion
+
+        #region Spectrum
+        public List<double> GetSpectrum()
+        {            
             int ret = BassWasapi.BASS_WASAPI_GetData(_fft, (int)BASSData.BASS_DATA_FFT8192);
             if (ret < -1) { return _spectrumdata; }
             else
@@ -113,15 +129,16 @@ namespace CSharpNationV2
                     }
 
                     y = peak * multiplier;
-                    if (y < 0) y = 0;
-                    //_spectrumdata.Add(y);
+                    if (y < 0) y = 0;                    
                     _spectrumdata[x] = y;
                 }
 
                 return _spectrumdata;
             }
         }
+        #endregion
 
+        #region Utils
         private int Process(IntPtr buffer, int length, IntPtr user)
         {
             return length;
@@ -133,5 +150,6 @@ namespace CSharpNationV2
             BassWasapi.BASS_WASAPI_Free();
             Bass.BASS_Free();
         }
+        #endregion
     }
 }

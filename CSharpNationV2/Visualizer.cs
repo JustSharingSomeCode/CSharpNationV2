@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using OpenTK;
+using OpenTK.Input;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 
@@ -20,6 +21,9 @@ namespace CSharpNationV2
 
             increase = 2.0f / analyzer._lines;
             SpectrumData = analyzer.GetSpectrum();
+
+            previousKeyboardState = Keyboard.GetState();
+            actualKeyboardState = Keyboard.GetState();
         }
 
         private Analyzer analyzer;
@@ -27,6 +31,9 @@ namespace CSharpNationV2
 
         private float increase = 0;
         private float actualPos = -1.0f;
+
+        KeyboardState previousKeyboardState;
+        KeyboardState actualKeyboardState;
 
         protected override void OnLoad(EventArgs e)
         {
@@ -45,18 +52,13 @@ namespace CSharpNationV2
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);
-
             
             //GL.Begin(PrimitiveType.Triangles);
             //GL.Color3(60, 60, 60);
             //GL.Vertex2(0.0f,0.5f);
             //GL.Vertex2(-0.5f, -0.5f);
             //GL.Vertex2(0.5f, -0.5f);
-            //GL.End();
-            if(SpectrumData.Count <= 0)
-            {
-                Console.WriteLine("<0");
-            }
+            //GL.End();            
             
             for (int i = 0; i < SpectrumData.Count; i++)
             {
@@ -78,12 +80,36 @@ namespace CSharpNationV2
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             SpectrumData = analyzer.GetSpectrum();
+            
+            previousKeyboardState = actualKeyboardState;
+            actualKeyboardState = Keyboard.GetState();
 
-            //Console.WriteLine(analyzer._spectrumdata[5].ToString());
+            if (IsKeyPressed(Key.P))
+            {
+                analyzer.PauseCapture();
+            }
+            else if (IsKeyPressed(Key.R))
+            {
+                analyzer.ResumeCapture();
+            }
+            else if (IsKeyPressed(Key.C))
+            {
+                analyzer.ChangeDevice(Convert.ToInt32(Console.ReadLine()));
+            }
 
             actualPos = -1;
 
             base.OnUpdateFrame(e);
+        }
+
+        private bool IsKeyPressed(Key key)
+        {
+            if(actualKeyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
