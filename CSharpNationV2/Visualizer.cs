@@ -19,7 +19,7 @@ namespace CSharpNationV2
             analyzer = _analyzer;
             analyzer.multiplier = height / 2;
 
-            increase = 2.0f / analyzer._lines;
+            increase = width / analyzer._lines;
             SpectrumData = analyzer.GetSpectrum();
 
             previousKeyboardState = Keyboard.GetState();
@@ -44,30 +44,29 @@ namespace CSharpNationV2
 
         protected override void OnResize(EventArgs e)
         {
-            GL.Viewport(0, 0, Width, Height);            
+            GL.Viewport(0, 0, Width, Height);
+
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadIdentity();
+            GL.Ortho(0.0f, Width, 0.0f, Height, 0.0f, 1.0f);
+
+            increase = Width / analyzer._lines;
 
             base.OnResize(e);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            
-            //GL.Begin(PrimitiveType.Triangles);
-            //GL.Color3(60, 60, 60);
-            //GL.Vertex2(0.0f,0.5f);
-            //GL.Vertex2(-0.5f, -0.5f);
-            //GL.Vertex2(0.5f, -0.5f);
-            //GL.End();            
+            GL.Clear(ClearBufferMask.ColorBufferBit);                                 
             
             for (int i = 0; i < SpectrumData.Count; i++)
             {
                 GL.Begin(PrimitiveType.Quads);
                 GL.Color3(0,0,0);
-                GL.Vertex2(actualPos, -1.0f);
-                GL.Vertex2(actualPos + increase, -1.0f);                
-                GL.Vertex2(actualPos + increase, SpectrumData[i] / 255.0f);
-                GL.Vertex2(actualPos, SpectrumData[i] / 255.0f);
+                GL.Vertex2(actualPos, 0);
+                GL.Vertex2(actualPos + increase, 0);                
+                GL.Vertex2(actualPos + increase, SpectrumData[i]);
+                GL.Vertex2(actualPos, SpectrumData[i]);
                 GL.End();
 
                 actualPos += increase;
@@ -97,7 +96,7 @@ namespace CSharpNationV2
                 analyzer.ChangeDevice(Convert.ToInt32(Console.ReadLine()));
             }
 
-            actualPos = -1;
+            actualPos = 0;
 
             base.OnUpdateFrame(e);
         }
