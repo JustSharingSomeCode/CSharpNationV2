@@ -13,7 +13,7 @@ namespace CSharpNationV2
     {             
         public float[] _fft;               //buffer for fft data
         private WASAPIPROC _process;        //callback function to obtain data
-        public List<double> _spectrumdata;   //spectrum data buffer
+        public List<float> _spectrumdata;   //spectrum data buffer
 
         private int previousDevice = -1;
 
@@ -25,7 +25,7 @@ namespace CSharpNationV2
         {
             _fft = new float[8192];
             _process = new WASAPIPROC(Process);
-            _spectrumdata = new List<double>();           
+            _spectrumdata = new List<float>();           
 
             InitializeSpectrumData();
 
@@ -107,19 +107,19 @@ namespace CSharpNationV2
         #endregion
 
         #region Spectrum
-        public List<double> GetSpectrum()
+        public List<float> GetSpectrum()
         {            
             int ret = BassWasapi.BASS_WASAPI_GetData(_fft, (int)BASSData.BASS_DATA_FFT8192);
             if (ret < -1) { return _spectrumdata; }
             else
             {
                 int x;
-                double y;
+                float y;
                 int b0 = 0;
 
                 for (x = 0; x < _lines; x++)
                 {
-                    double peak = 0;
+                    float peak = 0;
                     int b1 = (int)Math.Pow(2, x * 10.0 / (_lines - 1));
                     if (b1 > 1023) b1 = 1023;
                     if (b1 <= b0) b1 = b0 + 1;

@@ -25,10 +25,12 @@ namespace CSharpNationV2
 
             previousKeyboardState = Keyboard.GetState();
             actualKeyboardState = Keyboard.GetState();
+
+            wave = new Wave(Color.Black, SpectrumData);
         }
 
         private Analyzer analyzer;
-        private List<double> SpectrumData;
+        private List<float> SpectrumData;
         private List<int> peaks = new List<int>();
         private List<Vector2> peaksOnDegrees = new List<Vector2>();        
 
@@ -37,6 +39,8 @@ namespace CSharpNationV2
 
         KeyboardState previousKeyboardState;
         KeyboardState actualKeyboardState;
+
+        private Wave wave;
 
         protected override void OnLoad(EventArgs e)
         {
@@ -63,7 +67,8 @@ namespace CSharpNationV2
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             DrawCircle(Width / 2, Height / 2, Height / 4, Color.Red);
-            DrawWave(Width / 2, Height / 2, Height / 4, Color.Black);
+            
+            wave.DrawWave(Width / 2, Height / 2, Height / 4);
 
             for (int i = 0; i < SpectrumData.Count; i++)
             {
@@ -98,7 +103,8 @@ namespace CSharpNationV2
         {            
             SpectrumData = analyzer.GetSpectrum();
             peaks = WaveTools.FindPeaks(SpectrumData);
-            PeaksToDegrees();
+            
+            wave.UpdateSpectrumData(SpectrumData);
 
             previousKeyboardState = actualKeyboardState;
             actualKeyboardState = Keyboard.GetState();
@@ -160,47 +166,6 @@ namespace CSharpNationV2
             }
 
             GL.End();
-        }
-
-        private void PeaksToDegrees()
-        {
-            peaksOnDegrees.Clear();            
-
-            for(int i = 0; i < peaks.Count; i++)
-            {
-                peaksOnDegrees.Add(new Vector2(peaks[i] * 180 / analyzer._lines, float.Parse(SpectrumData[peaks[i]].ToString())));                
-            }
-        }
-
-        
-        private void DrawWave(double X, double Y, double Radius, Color C)
-        {
-            GL.Color3(C);
-            GL.Begin(PrimitiveType.LineLoop);
-
-            double rads, PosX, PosY, spectrumRadius;
-
-            for (int i = 0; i <= 180; i += 2)
-            {
-                spectrumRadius = Radius;
-
-                for (int j = 0; j < peaksOnDegrees.Count; j++)
-                {
-                    if(peaksOnDegrees[j].X == i)
-                    {
-                        spectrumRadius = Radius + peaksOnDegrees[j].Y;
-                    }
-                }
-
-                rads = Math.PI * i / 180;
-                PosX = X + (Math.Sin(rads) * spectrumRadius);
-                PosY = Y + (Math.Cos(rads) * spectrumRadius);
-
-                GL.Vertex2(PosX, PosY);
-            }
-
-            GL.End();
-        }
-        
+        }                
     }
 }
