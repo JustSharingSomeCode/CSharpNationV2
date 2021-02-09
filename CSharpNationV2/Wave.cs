@@ -12,15 +12,36 @@ namespace CSharpNationV2
 {
     public class Wave
     {
-        public Wave(Color c, List<float> data)
+        public Wave(Color c, List<float> data, int width, int height, float _influence)
         {
             waveColor = c;
             spectrumData = data;
+
+            UpdateWindowSize(width, height);
+            influence = _influence;
         }
+
+        private int Width, Height;
+        private int X, Y;
+        private float Radius;
 
         private Color waveColor;
         private List<float> spectrumData = new List<float>();
-        private List<Vector2> peaksOnDegrees = new List<Vector2>();
+        private List<Vector2> peaksOnDegrees = new List<Vector2>(); //x = degrees, y = spectrumValue
+        private List<Vector2> catmullRomPoints = new List<Vector2>();        
+
+        private float influence = 20;
+
+        public void UpdateWindowSize(int width, int height)
+        {
+            Width = width;
+            Height = height;
+
+            Radius = Height / 4;
+
+            X = Width / 2;
+            Y = Height / 2;
+        }
 
         public void UpdateSpectrumData(List<float> data)
         {
@@ -28,13 +49,57 @@ namespace CSharpNationV2
             UpdatePeaks();
         }
         
-        public void UpdatePeaks()
+        private void UpdatePeaks()
         {            
             peaksOnDegrees = WaveTools.PeaksToDegrees(spectrumData, WaveTools.FindPeaks(spectrumData));
+            UpdatePoints();
+        }
+
+        private void UpdatePoints()
+        {
+            catmullRomPoints.Clear();
+            for(int i = 0; i < peaksOnDegrees.Count; i++)
+            {                
+
+                float peakDegree = peaksOnDegrees[i].X;
+                float peakForce = peaksOnDegrees[i].Y;
+
+                catmullRomPoints.Add(WaveTools.DegreeToVector(X, Y, peakDegree - influence, Radius));
+
+                for (float j = 0; j <= 1.0f; j += 0.05f)
+                {
+                    catmullRomPoints.Add(WaveTools.CatmullRom(j, WaveTools.DegreeToVector(X, Y, peakDegree - influence, Radius),
+                        WaveTools.DegreeToVector(X, Y, peakDegree - influence, Radius),
+                        WaveTools.DegreeToVector(X, Y, peakDegree, Radius + peakForce),
+                        WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius)));
+                }
+
+                for (float j = 0; j <= 1.0f; j += 0.05f)
+                {
+                    catmullRomPoints.Add(WaveTools.CatmullRom(j, WaveTools.DegreeToVector(X, Y, peakDegree - influence, Radius),
+                        WaveTools.DegreeToVector(X, Y, peakDegree, Radius + peakForce),
+                        WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius),
+                        WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius)));
+                }
+
+                catmullRomPoints.Add(WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius));
+            }
         }
 
         public void DrawWave(double X, double Y, double Radius)
         {
+            
+            for (int i = 0; i < catmullRomPoints.Count - 1; i++)
+            {
+                GL.Color3(waveColor);
+                GL.Begin(PrimitiveType.TriangleFan);
+                GL.Vertex2(catmullRomPoints[i]);
+                GL.Vertex2(catmullRomPoints[i + 1]);
+                GL.Vertex2(X, Y);
+                GL.End();
+            }
+            
+
             GL.Color3(waveColor);
             GL.Begin(PrimitiveType.LineLoop);
 
@@ -57,9 +122,9 @@ namespace CSharpNationV2
                 PosY = Y + (Math.Cos(rads) * spectrumRadius);
 
                 GL.Vertex2(PosX, PosY);
-            }            
+            }                               
 
-            GL.End();
+            GL.End();            
         }
     }
 }

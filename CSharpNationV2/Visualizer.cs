@@ -18,7 +18,7 @@ namespace CSharpNationV2
         {
             VSync = VSyncMode.On;
             analyzer = _analyzer;
-            analyzer.multiplier = height / 2;
+            analyzer.multiplier = height / 3;
 
             increase = width / analyzer._lines;
             SpectrumData = analyzer.GetSpectrum();
@@ -26,7 +26,15 @@ namespace CSharpNationV2
             previousKeyboardState = Keyboard.GetState();
             actualKeyboardState = Keyboard.GetState();
 
-            wave = new Wave(Color.Black, SpectrumData);
+            waves.Add(new Wave(Color.FromArgb(0, 255, 0), SpectrumData, Width, Height,60));
+            waves.Add(new Wave(Color.FromArgb(50, 205, 255), SpectrumData, Width, Height,45));
+            waves.Add(new Wave(Color.Blue, SpectrumData, Width, Height,40));
+            waves.Add(new Wave(Color.FromArgb(50, 50, 155), SpectrumData, Width, Height,36));
+            waves.Add(new Wave(Color.FromArgb(255, 100, 255), SpectrumData, Width, Height, 32));
+            waves.Add(new Wave(Color.Red, SpectrumData, Width, Height, 28));
+            waves.Add(new Wave(Color.FromArgb(255, 150, 0), SpectrumData, Width, Height, 24));
+            waves.Add(new Wave(Color.Yellow, SpectrumData, Width, Height, 22));
+            waves.Add(new Wave(Color.White, SpectrumData, Width, Height, 20));
         }
 
         private Analyzer analyzer;
@@ -40,7 +48,8 @@ namespace CSharpNationV2
         KeyboardState previousKeyboardState;
         KeyboardState actualKeyboardState;
 
-        private Wave wave;
+        private List<Wave> waves = new List<Wave>();
+        //private Wave wave;
 
         protected override void OnLoad(EventArgs e)
         {
@@ -57,6 +66,12 @@ namespace CSharpNationV2
             GL.LoadIdentity();
             GL.Ortho(0.0f, Width, 0.0f, Height, 0.0f, 1.0f);
 
+            //wave.UpdateWindowSize(Width, Height);
+            for(int i = 0; i < waves.Count; i++)
+            {
+                waves[i].UpdateWindowSize(Width, Height);
+            }
+
             increase = Width / analyzer._lines;
 
             base.OnResize(e);
@@ -64,11 +79,16 @@ namespace CSharpNationV2
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-
-            DrawCircle(Width / 2, Height / 2, Height / 4, Color.Red);
+            GL.Clear(ClearBufferMask.ColorBufferBit);            
             
-            wave.DrawWave(Width / 2, Height / 2, Height / 4);
+            //wave.DrawWave(Width / 2, Height / 2, Height / 4);
+            for(int i = 0; i < waves.Count; i++)
+            {
+                waves[i].DrawWave(Width / 2, Height / 2, Height / 4);
+            }
+
+            DrawCircle(Width / 2, Height / 2, Height / 4, Color.White);
+            DrawCircle(Width / 2, Height / 2, Height / 4.2, Color.Black);
 
             for (int i = 0; i < SpectrumData.Count; i++)
             {
@@ -104,7 +124,11 @@ namespace CSharpNationV2
             SpectrumData = analyzer.GetSpectrum();
             peaks = WaveTools.FindPeaks(SpectrumData);
             
-            wave.UpdateSpectrumData(SpectrumData);
+            //wave.UpdateSpectrumData(SpectrumData);
+            for(int i = 0; i < waves.Count; i++)
+            {
+                waves[i].UpdateSpectrumData(SpectrumData);
+            }
 
             previousKeyboardState = actualKeyboardState;
             actualKeyboardState = Keyboard.GetState();
