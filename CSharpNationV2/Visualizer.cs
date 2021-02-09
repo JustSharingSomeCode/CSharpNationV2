@@ -26,15 +26,15 @@ namespace CSharpNationV2
             previousKeyboardState = Keyboard.GetState();
             actualKeyboardState = Keyboard.GetState();
 
-            waves.Add(new Wave(Color.FromArgb(0, 255, 0), SpectrumData, Width, Height,60));
-            waves.Add(new Wave(Color.FromArgb(50, 205, 255), SpectrumData, Width, Height,45));
-            waves.Add(new Wave(Color.Blue, SpectrumData, Width, Height,40));
-            waves.Add(new Wave(Color.FromArgb(50, 50, 155), SpectrumData, Width, Height,36));
-            waves.Add(new Wave(Color.FromArgb(255, 100, 255), SpectrumData, Width, Height, 32));
-            waves.Add(new Wave(Color.Red, SpectrumData, Width, Height, 28));
-            waves.Add(new Wave(Color.FromArgb(255, 150, 0), SpectrumData, Width, Height, 24));
-            waves.Add(new Wave(Color.Yellow, SpectrumData, Width, Height, 22));
-            waves.Add(new Wave(Color.White, SpectrumData, Width, Height, 20));
+            waves.Add(new Wave(Color.FromArgb(0, 255, 0), SpectrumData, Width, Height,85));
+            waves.Add(new Wave(Color.FromArgb(50, 205, 255), SpectrumData, Width, Height,72));
+            waves.Add(new Wave(Color.Blue, SpectrumData, Width, Height,65));
+            waves.Add(new Wave(Color.FromArgb(50, 50, 155), SpectrumData, Width, Height,60));
+            waves.Add(new Wave(Color.FromArgb(255, 100, 255), SpectrumData, Width, Height, 55));
+            waves.Add(new Wave(Color.Red, SpectrumData, Width, Height, 53));
+            waves.Add(new Wave(Color.FromArgb(255, 150, 0), SpectrumData, Width, Height, 46));
+            waves.Add(new Wave(Color.Yellow, SpectrumData, Width, Height, 43));
+            waves.Add(new Wave(Color.White, SpectrumData, Width, Height, 40));
         }
 
         private Analyzer analyzer;
@@ -48,8 +48,7 @@ namespace CSharpNationV2
         KeyboardState previousKeyboardState;
         KeyboardState actualKeyboardState;
 
-        private List<Wave> waves = new List<Wave>();
-        //private Wave wave;
+        private List<Wave> waves = new List<Wave>();        
 
         protected override void OnLoad(EventArgs e)
         {
@@ -65,8 +64,7 @@ namespace CSharpNationV2
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
             GL.Ortho(0.0f, Width, 0.0f, Height, 0.0f, 1.0f);
-
-            //wave.UpdateWindowSize(Width, Height);
+            
             for(int i = 0; i < waves.Count; i++)
             {
                 waves[i].UpdateWindowSize(Width, Height);
@@ -80,8 +78,7 @@ namespace CSharpNationV2
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             GL.Clear(ClearBufferMask.ColorBufferBit);            
-            
-            //wave.DrawWave(Width / 2, Height / 2, Height / 4);
+                        
             for(int i = 0; i < waves.Count; i++)
             {
                 waves[i].DrawWave(Width / 2, Height / 2, Height / 4);
@@ -123,8 +120,7 @@ namespace CSharpNationV2
         {            
             SpectrumData = analyzer.GetSpectrum();
             peaks = WaveTools.FindPeaks(SpectrumData);
-            
-            //wave.UpdateSpectrumData(SpectrumData);
+                        
             for(int i = 0; i < waves.Count; i++)
             {
                 waves[i].UpdateSpectrumData(SpectrumData);

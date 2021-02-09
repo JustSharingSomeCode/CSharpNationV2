@@ -69,26 +69,24 @@ namespace CSharpNationV2
                 for (float j = 0; j <= 1.0f; j += 0.05f)
                 {
                     catmullRomPoints.Add(WaveTools.CatmullRom(j, WaveTools.DegreeToVector(X, Y, peakDegree - influence, Radius),
-                        WaveTools.DegreeToVector(X, Y, peakDegree - influence, Radius),
+                        WaveTools.DegreeToVector(X, Y, peakDegree - (influence / 2.0f), Radius),
                         WaveTools.DegreeToVector(X, Y, peakDegree, Radius + peakForce),
-                        WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius)));
+                        WaveTools.DegreeToVector(X, Y, peakDegree + (influence / 2.0f), Radius)));
                 }
 
                 for (float j = 0; j <= 1.0f; j += 0.05f)
                 {
-                    catmullRomPoints.Add(WaveTools.CatmullRom(j, WaveTools.DegreeToVector(X, Y, peakDegree - influence, Radius),
+                    catmullRomPoints.Add(WaveTools.CatmullRom(j, WaveTools.DegreeToVector(X, Y, peakDegree - (influence / 2.0f), Radius),
                         WaveTools.DegreeToVector(X, Y, peakDegree, Radius + peakForce),
-                        WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius),
+                        WaveTools.DegreeToVector(X, Y, peakDegree + (influence / 2.0f), Radius),
                         WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius)));
                 }
-
                 catmullRomPoints.Add(WaveTools.DegreeToVector(X, Y, peakDegree + influence, Radius));
             }
         }
 
         public void DrawWave(double X, double Y, double Radius)
-        {
-            
+        {            
             for (int i = 0; i < catmullRomPoints.Count - 1; i++)
             {
                 GL.Color3(waveColor);
@@ -97,34 +95,7 @@ namespace CSharpNationV2
                 GL.Vertex2(catmullRomPoints[i + 1]);
                 GL.Vertex2(X, Y);
                 GL.End();
-            }
-            
-
-            GL.Color3(waveColor);
-            GL.Begin(PrimitiveType.LineLoop);
-
-            double rads, PosX, PosY, spectrumRadius;
-
-            for (float i = 0; i <= 180.0f; i += 0.1f)
-            {
-                spectrumRadius = Radius;
-
-                for (int j = 0; j < peaksOnDegrees.Count; j++)
-                {
-                    if (peaksOnDegrees[j].X >= i && peaksOnDegrees[j].X < i + 0.1f)
-                    {
-                        spectrumRadius = Radius + peaksOnDegrees[j].Y;
-                    }
-                }
-
-                rads = Math.PI * i / 180.0f;
-                PosX = X + (Math.Sin(rads) * spectrumRadius);
-                PosY = Y + (Math.Cos(rads) * spectrumRadius);
-
-                GL.Vertex2(PosX, PosY);
-            }                               
-
-            GL.End();            
-        }
+            }                       
+        }       
     }
 }
