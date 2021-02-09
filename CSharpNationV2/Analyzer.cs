@@ -18,7 +18,7 @@ namespace CSharpNationV2
         private int previousDevice = -1;
 
         public float multiplier = 1;
-        public int _lines = 30;
+        public int _lines = 25;
 
         #region Constructor
         public Analyzer()

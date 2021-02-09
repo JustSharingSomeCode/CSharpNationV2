@@ -18,7 +18,9 @@ namespace CSharpNationV2
         {
             VSync = VSyncMode.On;
             analyzer = _analyzer;
-            analyzer.multiplier = height / 3;
+            analyzer.multiplier = height / 4;
+
+            replay = new Replay(10);
 
             increase = width / analyzer._lines;
             SpectrumData = analyzer.GetSpectrum();
@@ -38,12 +40,14 @@ namespace CSharpNationV2
         }
 
         private Analyzer analyzer;
+        private Replay replay;
+
         private List<float> SpectrumData;
         private List<int> peaks = new List<int>();
         private List<Vector2> peaksOnDegrees = new List<Vector2>();        
 
         private float increase = 0;
-        private float actualPos = -1.0f;
+        //private float actualPos = -1.0f;
 
         KeyboardState previousKeyboardState;
         KeyboardState actualKeyboardState;
@@ -87,6 +91,7 @@ namespace CSharpNationV2
             DrawCircle(Width / 2, Height / 2, Height / 4, Color.White);
             DrawCircle(Width / 2, Height / 2, Height / 4.2, Color.Black);
 
+            /*
             for (int i = 0; i < SpectrumData.Count; i++)
             {
                 GL.Begin(PrimitiveType.Quads);
@@ -110,7 +115,9 @@ namespace CSharpNationV2
                 }
 
                 actualPos += increase;
+                
             }
+            */
 
             Context.SwapBuffers();
             base.OnRenderFrame(e);
@@ -119,12 +126,24 @@ namespace CSharpNationV2
         protected override void OnUpdateFrame(FrameEventArgs e)
         {            
             SpectrumData = analyzer.GetSpectrum();
-            peaks = WaveTools.FindPeaks(SpectrumData);
+            //peaks = WaveTools.FindPeaks(SpectrumData);
+            replay.UpdateReplay(SpectrumData);
                         
+            /*
             for(int i = 0; i < waves.Count; i++)
             {
-                waves[i].UpdateSpectrumData(SpectrumData);
-            }
+                //waves[i].UpdateSpectrumData(SpectrumData);              
+            }*/
+
+            waves[0].UpdateSpectrumData(replay.GetReplay(8));
+            waves[1].UpdateSpectrumData(replay.GetReplay(7));
+            waves[2].UpdateSpectrumData(replay.GetReplay(6));
+            waves[3].UpdateSpectrumData(replay.GetReplay(5));
+            waves[4].UpdateSpectrumData(replay.GetReplay(4));
+            waves[5].UpdateSpectrumData(replay.GetReplay(3));
+            waves[6].UpdateSpectrumData(replay.GetReplay(2));
+            waves[7].UpdateSpectrumData(replay.GetReplay(1));
+            waves[8].UpdateSpectrumData(replay.GetReplay(0));            
 
             previousKeyboardState = actualKeyboardState;
             actualKeyboardState = Keyboard.GetState();
@@ -142,14 +161,14 @@ namespace CSharpNationV2
                 analyzer.ChangeDevice(Convert.ToInt32(Console.ReadLine()));
             }
 
-            actualPos = 0;
+            //actualPos = 0;
 
             base.OnUpdateFrame(e);
         }
 
         private bool IsKeyPressed(Key key)
         {
-            if(actualKeyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key))
+            if(actualKeyboardState.IsKeyDown(key) && previousKeyboardState.IsKeyUp(key) && Focused == true)
             {
                 return true;
             }
