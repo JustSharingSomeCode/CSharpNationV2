@@ -24,6 +24,8 @@ namespace CSharpNationV2
 
             increase = width / analyzer._lines;
             SpectrumData = analyzer.GetSpectrum();
+            PreviousSpectrumData = SpectrumData;
+            SmoothSpectrumData = PreviousSpectrumData;
 
             previousKeyboardState = Keyboard.GetState();
             actualKeyboardState = Keyboard.GetState();
@@ -43,8 +45,10 @@ namespace CSharpNationV2
         private Replay replay;
 
         private List<float> SpectrumData;
-        private List<int> peaks = new List<int>();
-        private List<Vector2> peaksOnDegrees = new List<Vector2>();        
+        private List<float> PreviousSpectrumData = new List<float>();
+        private List<float> SmoothSpectrumData = new List<float>();
+        //private List<int> peaks = new List<int>();
+        //private List<Vector2> peaksOnDegrees = new List<Vector2>();        
 
         private float increase = 0;
         //private float actualPos = -1.0f;
@@ -124,10 +128,15 @@ namespace CSharpNationV2
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
-        {            
+        {
+            PreviousSpectrumData = SmoothSpectrumData;
             SpectrumData = analyzer.GetSpectrum();
             //peaks = WaveTools.FindPeaks(SpectrumData);
-            replay.UpdateReplay(SpectrumData);
+
+            //Smooth process
+            SmoothSpectrumData = WaveTools.SmoothWave(SpectrumData, PreviousSpectrumData);
+
+            replay.UpdateReplay(SmoothSpectrumData);
                         
             /*
             for(int i = 0; i < waves.Count; i++)
@@ -162,6 +171,8 @@ namespace CSharpNationV2
             }
 
             //actualPos = 0;
+
+            //Console.WriteLine(RenderFrequency);
 
             base.OnUpdateFrame(e);
         }

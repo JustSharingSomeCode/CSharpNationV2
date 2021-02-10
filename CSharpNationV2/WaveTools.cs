@@ -9,7 +9,8 @@ using OpenTK;
 namespace CSharpNationV2
 {
     public class WaveTools
-    {        
+    {
+        #region FindPeaks
         public static List<int> FindPeaks(List<float> spectrum)
         {
             List<int> peaks = new List<int>();
@@ -17,31 +18,34 @@ namespace CSharpNationV2
 
             for(int i = 0; i < spectrum.Count; i++)
             {
-                for (int p = i - 4; p <= i + 4; p++)
+                for (int p = i - 3; p <= i + 3; p++)
                 {
                     if(p == i)
                     {
                         continue;
                     }
 
-                    if (!(spectrum[i] > spectrum[ClampInt(p, 0, spectrum.Count - 1)]))
+                    if (spectrum[i] < spectrum[ClampInt(p, 0, spectrum.Count - 1)])
                     {
                         IsPeak = false;
                         break;
                     }
 
-                    IsPeak = true;
+                    IsPeak = true;                    
                 }
 
                 if(IsPeak)
                 {
                     peaks.Add(i);
+                    i += 4;
                 }
             }
 
             return peaks;
         }
+        #endregion
 
+        #region PeaksToDegrees
         public static List<Vector2> PeaksToDegrees(List<float> spectrumData, List<int> peaks)
         {
             List<Vector2> degrees = new List<Vector2>();
@@ -54,7 +58,7 @@ namespace CSharpNationV2
                 right = spectrumData[ClampInt(peaks[i] + 1, 0, spectrumData.Count - 1)];
 
                 leftPercentaje = 1.0f - (spectrumData[peaks[i]] / (spectrumData[peaks[i]] + left));
-                rightPercentaje = 1.0f - (spectrumData[peaks[i]] / (spectrumData[peaks[i]] + right));
+                rightPercentaje = 1.0f - (spectrumData[peaks[i]] / (spectrumData[peaks[i]] + right));                
 
                 if (left > right)
                 {                    
@@ -68,7 +72,9 @@ namespace CSharpNationV2
 
             return degrees;
         }
+        #endregion
 
+        #region DegreeToVector
         public static Vector2 DegreeToVector(double X, double Y, float degree, float radius)
         {
             double rads, PosX, PosY;            
@@ -79,7 +85,9 @@ namespace CSharpNationV2
 
             return new Vector2(float.Parse(PosX.ToString()), float.Parse(PosY.ToString()));
         }
+        #endregion
 
+        #region CatmullRom
         public static Vector2 CatmullRom(float t, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3)
         {
             Vector2 a = 2f * p1;
@@ -90,6 +98,19 @@ namespace CSharpNationV2
             Vector2 pos = 0.5f * (a + (b * t) + (c * t * t) + (d * t * t * t));
 
             return pos;
+        }
+        #endregion
+
+        public static List<float> SmoothWave(List<float> actualSpectrum, List<float> previousSpectrum, int smoothing = 2)
+        {                                
+            float[] smoothWave = new float[actualSpectrum.Count];            
+            
+            for(int i = 0; i < actualSpectrum.Count; i++)
+            {
+                smoothWave[i] = previousSpectrum[i] + (actualSpectrum[i] - previousSpectrum[i]) / 4.0f;
+            }
+
+            return smoothWave.ToList();
         }
 
         private static int ClampInt(int value, int min, int max)
