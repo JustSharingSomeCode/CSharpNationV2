@@ -56,8 +56,8 @@ namespace CSharpNationV2
         }
         
         private void UpdatePeaks()
-        {            
-            peaksOnDegrees = WaveTools.PeaksToDegrees(spectrumData, WaveTools.FindPeaks(spectrumData));
+        {
+            peaksOnDegrees = WaveTools.PeaksToDegrees(spectrumData, WaveTools.FindPeaks(spectrumData), 6);
 
             int n = peaksOnDegrees.Count;
             for(int i = 0; i < n; i++)

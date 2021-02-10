@@ -46,28 +46,42 @@ namespace CSharpNationV2
         #endregion
 
         #region PeaksToDegrees
-        public static List<Vector2> PeaksToDegrees(List<float> spectrumData, List<int> peaks)
+        public static List<Vector2> PeaksToDegrees(List<float> spectrumData, List<int> peaks, int influence = 2)
         {
             List<Vector2> degrees = new List<Vector2>();
-            float left, right;
-            float leftPercentaje, rightPercentaje;
+            int halfInfluence = influence / 2;
+            float left = 0, right = 0;
+            float leftPercentaje = 0, rightPercentaje = 0;
 
             for (int i = 0; i < peaks.Count; i++)
             {
-                left = spectrumData[ClampInt(peaks[i] - 1, 0, spectrumData.Count - 1)];
-                right = spectrumData[ClampInt(peaks[i] + 1, 0, spectrumData.Count - 1)];
+                for(int l = peaks[i] - halfInfluence; l < peaks[i]; l++)
+                {
+                    if (l >= 0 && l < spectrumData.Count)
+                    {
+                        left += spectrumData[l];
+                    }
+                }
 
-                leftPercentaje = 1.0f - (spectrumData[peaks[i]] / (spectrumData[peaks[i]] + left));
-                rightPercentaje = 1.0f - (spectrumData[peaks[i]] / (spectrumData[peaks[i]] + right));                
+                for (int r = peaks[i] + 1; r <= peaks[i] + halfInfluence; r++)
+                {
+                    if (r >= 0 && r < spectrumData.Count)
+                    {
+                        right += spectrumData[r];
+                    }
+                }
+
+                leftPercentaje = halfInfluence - (spectrumData[peaks[i]] / (spectrumData[peaks[i]] + left));
+                rightPercentaje = halfInfluence - (spectrumData[peaks[i]] / (spectrumData[peaks[i]] + right));
 
                 if (left > right)
-                {                    
+                {
                     degrees.Add(new Vector2((peaks[i] - Math.Abs(leftPercentaje - rightPercentaje)) * 180.0f / spectrumData.Count, spectrumData[peaks[i]]));
                 }
                 else
-                {                    
+                {
                     degrees.Add(new Vector2((peaks[i] + Math.Abs(leftPercentaje - rightPercentaje)) * 180.0f / spectrumData.Count, spectrumData[peaks[i]]));
-                }
+                }                
             }
 
             return degrees;
@@ -101,17 +115,19 @@ namespace CSharpNationV2
         }
         #endregion
 
-        public static List<float> SmoothWave(List<float> actualSpectrum, List<float> previousSpectrum, int smoothing = 2)
+        #region SmoothWave
+        public static List<float> SmoothWave(List<float> actualSpectrum, List<float> previousSpectrum, float smoothing = 2)
         {                                
             float[] smoothWave = new float[actualSpectrum.Count];            
             
             for(int i = 0; i < actualSpectrum.Count; i++)
             {
-                smoothWave[i] = previousSpectrum[i] + (actualSpectrum[i] - previousSpectrum[i]) / 4.0f;
+                smoothWave[i] = previousSpectrum[i] + (actualSpectrum[i] - previousSpectrum[i]) / smoothing;
             }
 
             return smoothWave.ToList();
         }
+        #endregion
 
         private static int ClampInt(int value, int min, int max)
         {
